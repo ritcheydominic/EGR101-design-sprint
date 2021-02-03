@@ -1,5 +1,5 @@
 /*
- * Design Sprint
+ * Arduino Code for Design Sprint
  * Written by: Trey Howell and Dominic Ritchey
  * 
  * This program is based on the Arduino sketch example provided at https://www.epitran.it/ebayDrive/datasheet/25.pdf
@@ -13,30 +13,40 @@ int aVal;
 boolean bCW;
 
 void setup() {
-  pinMode (pinA,INPUT);
-  pinMode (pinB,INPUT);
-  /* Read Pin A
-  Whatever state it's in will reflect the last position */
+  // Set up pins
+  pinMode(pinA,INPUT);
+  pinMode(pinB,INPUT);
+  
+  // Read pin A (whatever state it's in will reflect the last position)
   pinALast = digitalRead(pinA);
+
+  // Set up logging
   Serial.begin (9600);
 }
 
 void loop() {
+  // Grab pin A value
   aVal = digitalRead(pinA);
-  if (aVal != pinALast){ // Means the knob is rotating
-    // if the knob is rotating, we need to determine direction
-    // We do that by reading pin B.
-    if (digitalRead(pinB) != aVal) { // Means pin A Changed first - We're Rotating Clockwise
-      encoderPosCount ++;
+  
+  if (aVal != pinALast) { // Knob has rotated
+    // Determine direction by grabbing pin B value
+    if (digitalRead(pinB) != aVal) { // Pin A changed first, so we're rotating clockwise
+      encoderPosCount++;
       bCW = true;
-    } else {// Otherwise B changed first and we're moving CCW
+    } else { // Pin B changed first, so we're rotating counterclockwise
       bCW = false;
       encoderPosCount--;
     }
-  Serial.print ("Rotated: "); if (bCW){
-  Serial.println ("clockwise"); }else{
-  Serial.println("counterclockwise"); }
-  Serial.print("Encoder Position: "); Serial.println(encoderPosCount);
+
+    // Print data for diagnostics
+    Serial.print("Rotated: ");
+    if (bCW) {
+      Serial.println("Clockwise");
+    } else {
+      Serial.println("Counterclockwise");
+    }
+    Serial.print("Encoder Position: ");
+    Serial.println(encoderPosCount);
   }
-  pinALast = aVal;
+  pinALast = aVal; // Update last value for pin A
 }
