@@ -7,10 +7,14 @@
 
 int pinA = 3; // Connected to CLK on KY-040
 int pinB = 4; // Connected to DT on KY-040
-int encoderPosCount = 0;
+//int encoderPosCount = 0;
 int pinALast;
 int aVal;
-boolean bCW;
+//boolean bCW;
+
+unsigned long handwashingStarted = 0;
+int secondsElapsed = 0;
+boolean washingHands;
 
 void setup() {
   // Set up pins
@@ -29,24 +33,48 @@ void loop() {
   aVal = digitalRead(pinA);
   
   if (aVal != pinALast) { // Knob has rotated
-    // Determine direction by grabbing pin B value
-    if (digitalRead(pinB) != aVal) { // Pin A changed first, so we're rotating clockwise
-      encoderPosCount++;
-      bCW = true;
-    } else { // Pin B changed first, so we're rotating counterclockwise
-      bCW = false;
-      encoderPosCount--;
+    washingHands = true;
+    
+    // Log time handwashing started
+    if (handwashingStarted == 0) {
+      handwashingStarted = millis();
     }
+    
+//    // Determine direction by grabbing pin B value
+//    if (digitalRead(pinB) != aVal) { // Pin A changed first, so we're rotating clockwise
+//      encoderPosCount++;
+//      bCW = true;
+//    } else { // Pin B changed first, so we're rotating counterclockwise
+//      bCW = false;
+//      encoderPosCount--;
+//    }
 
-    // Print data for diagnostics
-    Serial.print("Rotated: ");
-    if (bCW) {
-      Serial.println("Clockwise");
-    } else {
-      Serial.println("Counterclockwise");
-    }
-    Serial.print("Encoder Position: ");
-    Serial.println(encoderPosCount);
+//    // Print data for diagnostics
+//    Serial.print("Rotated: ");
+//    if (bCW) {
+//      Serial.println("Clockwise");
+//    } else {
+//      Serial.println("Counterclockwise");
+//    }
+//    Serial.print("Encoder Position: ");
+//    Serial.println(encoderPosCount);
   }
   pinALast = aVal; // Update last value for pin A
+
+  if (washingHands) {
+    if (secondsElapsed < (millis() - handwashingStarted) / 1000) { // Second counter is off
+      secondsElapsed = (millis() - handwashingStarted) / 1000; // Update second counter
+      
+      // Print data for diagnostics
+      Serial.print(secondsElapsed);
+      Serial.println(" seconds elapsed");
+    }
+
+    // Reset timer after 20 seconds elapsed
+    if (secondsElapsed == 20) {
+      washingHands = false;
+      secondsElapsed = 0;
+      handwashingStarted = 0;
+    }
+  }  
 }
