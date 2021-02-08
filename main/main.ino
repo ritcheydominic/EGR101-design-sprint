@@ -107,6 +107,7 @@ void loop() {
     }
   }
 
+  // Push updates to LEDs
   FastLED.show();
   FastLED.delay(1000 / LED_FPS);
 }
