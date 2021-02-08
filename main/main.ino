@@ -14,14 +14,14 @@ boolean bCW;
 
 void setup() {
   // Set up pins
-  pinMode(pinA,INPUT);
-  pinMode(pinB,INPUT);
+  pinMode(pinA, INPUT);
+  pinMode(pinB, INPUT);
   
   // Read pin A (whatever state it's in will reflect the last position)
   pinALast = digitalRead(pinA);
 
   // Set up logging
-  Serial.begin (9600);
+  Serial.begin(9600);
 }
 
 void loop() {
