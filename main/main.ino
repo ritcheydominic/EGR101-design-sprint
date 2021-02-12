@@ -12,21 +12,18 @@ FASTLED_USING_NAMESPACE
 
 #define ENCODER_PIN_A 3 // Connected to CLK on KY-040
 #define ENCODER_PIN_B 4 // Connected to DT on KY-040
-//int encoderPosCount = 0;
 int lastEncoderPinAValue;
 int encoderPinAValue;
-//boolean bCW;
 
 #define LED_DATA_PIN 8
 #define LED_BRIGHTNESS 100
-#define NUM_LEDS 3
+#define NUM_LEDS 19
 #define LED_TYPE    WS2811
 #define LED_COLOR_ORDER GRB
 #define LED_FPS 30
 CRGB leds[NUM_LEDS];
 
-unsigned long handwashingStarted = 0;
-int secondsElapsed = 0;
+int secondsElapsed = -1;
 boolean washingHands;
 
 void setup() {
@@ -46,68 +43,40 @@ void setup() {
 }
 
 void loop() {
-  // Grab pin A value
-  encoderPinAValue = digitalRead(ENCODER_PIN_A);
+  encoderPinAValue = digitalRead(ENCODER_PIN_A); // Grab pin A value
   
   if (encoderPinAValue != lastEncoderPinAValue) { // Knob has rotated
     washingHands = true;
-    
-    // Log time handwashing started
-    if (handwashingStarted == 0) {
-      handwashingStarted = millis();
-    }
-    
-//    // Determine direction by grabbing pin B value
-//    if (digitalRead(ENCODER_PIN_B) != aVal) { // Pin A changed first, so we're rotating clockwise
-//      encoderPosCount++;
-//      bCW = true;
-//    } else { // Pin B changed first, so we're rotating counterclockwise
-//      bCW = false;
-//      encoderPosCount--;
-//    }
-
-//    // Print data for diagnostics
-//    Serial.print("Rotated: ");
-//    if (bCW) {
-//      Serial.println("Clockwise");
-//    } else {
-//      Serial.println("Counterclockwise");
-//    }
-//    Serial.print("Encoder Position: ");
-//    Serial.println(encoderPosCount);
   }
+  
   lastEncoderPinAValue = encoderPinAValue; // Update last value for pin A
 
   if (washingHands) {
-    if (secondsElapsed < (millis() - handwashingStarted) / 1000) { // Second counter is off
-      secondsElapsed = (millis() - handwashingStarted) / 1000; // Update second counter
-      
-      // Print data for diagnostics
-      Serial.print(secondsElapsed);
-      Serial.println(" seconds elapsed");
-    }
+    secondsElapsed++;
+    
+    // Print data for diagnostics
+    Serial.print(secondsElapsed);
+    Serial.println(" seconds elapsed");
 
-    // Reset timer after 20 seconds elapsed
-    if (secondsElapsed == 20) {
+    if (secondsElapsed == 23) { // Reset timer after 23 seconds elapsed (20 seconds handwashing + 3 seconds reset)
       washingHands = false;
-      secondsElapsed = 0;
-      handwashingStarted = 0;
+      secondsElapsed = -1;
 
-      leds[0] = CHSV(0, 0, 0);
-      leds[1] = CHSV(0, 0, 0);
-      leds[2] = CHSV(0, 0, 0);
+      for (int i = 0; i < NUM_LEDS; i++) {
+        leds[i] = CHSV(0, 0, 0);
+      }
+    } else if (secondsElapsed == 20) { // Switch LEDs to green after 20 seconds signalling completion
+      for (int i = 0; i < NUM_LEDS; i++) {
+        leds[i] = CRGB::Green;
+      }
+    } else { // Illuminate LEDs one by one as counter goes up
+      leds[secondsElapsed - 1] = CRGB::Red;
     }
 
-    if (secondsElapsed == 1) {
-      leds[0] = CRGB::White;
-    } else if (secondsElapsed == 2) {
-      leds[1] = CRGB::White;
-    } else if (secondsElapsed == 3) {
-      leds[2] = CRGB::White;
-    }
+    // Push updates to LEDs
+    FastLED.show();
+    FastLED.delay(1000 / LED_FPS);
+
+    delay(1000); // Wait for 1 second
   }
-
-  // Push updates to LEDs
-  FastLED.show();
-  FastLED.delay(1000 / LED_FPS);
 }
